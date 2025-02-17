@@ -8,7 +8,7 @@ def talker():
     rate = rospy.Rate(1)  # Frekuensi pengiriman pesan (1 Hz = 1 detik sekali)
 
     while not rospy.is_shutdown():
-        message = "Halo dari ROBOTIK! Waktu: %s" % rospy.get_time()
+        message = "Halo dari ROBOTIK! Pesan Baru, Waktu: %s" % rospy.get_time()
         rospy.loginfo(f"Mengirim pesan: {message}")
         pub.publish(message)  # Mengirim pesan ke topic
         rate.sleep()  # Tunggu sesuai rate
