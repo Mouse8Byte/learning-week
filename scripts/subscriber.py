@@ -1,34 +1,33 @@
+# turtle_controller.py
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
-import sys
-import termios
-import tty
+from geometry_msgs.msg import Twist
 
-# Node Input: Mengirim perintah ke topik /turtle_commands
-def get_key():
-    tty.setraw(sys.stdin.fileno())
-    key = sys.stdin.read(1)
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, termios.tcgetattr(sys.stdin))
-    return key
-
-def input_node():
-    rospy.init_node('input_node', anonymous=True)
-    pub = rospy.Publisher('/turtle_commands', String, queue_size=10)
-    rate = rospy.Rate(10)
+# Node Output: Menerima perintah dan menggerakkan TurtleSim
+def callback(data):
+    rospy.loginfo(f"Received: {data.data}")
+    pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
+    twist = Twist()
     
-    print("Gunakan WASD untuk menggerakkan TurtleSim. Tekan Q untuk keluar.")
-    while not rospy.is_shutdown():
-        key = get_key()
-        if key in ['w', 'a', 's', 'd']:
-            rospy.loginfo(f"Sending command: {key}")
-            pub.publish(key)
-        elif key == 'q':
-            break
-        rate.sleep()
+    if data.data == 'w':
+        twist.linear.x = 2.0
+    elif data.data == 's':
+        twist.linear.x = -2.0
+    elif data.data == 'a':
+        twist.angular.z = 2.0
+    elif data.data == 'd':
+        twist.angular.z = -2.0
+    
+    pub.publish(twist)
+
+def output_node():
+    rospy.init_node('output_node', anonymous=True)
+    rospy.Subscriber('/turtle_commands', String, callback)
+    rospy.spin()
 
 if _name_ == '_main_':
     try:
-        input_node()
+        output_node()
     except rospy.ROSInterruptException:
         pass
