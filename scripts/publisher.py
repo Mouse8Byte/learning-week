@@ -1,20 +1,34 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
+import sys
+import termios
+import tty
 
-def talker():
-    pub = rospy.Publisher('/chatter', String, queue_size=10)  # Membuat publisher ke topic 'chatter'
-    rospy.init_node('talker', anonymous=True)  # Inisialisasi node dengan nama 'talker'
-    rate = rospy.Rate(1)  # Frekuensi pengiriman pesan (1 Hz = 1 detik sekali)
+# Node Input: Mengirim perintah ke topik /turtle_commands
+def get_key():
+    tty.setraw(sys.stdin.fileno())
+    key = sys.stdin.read(1)
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, termios.tcgetattr(sys.stdin))
+    return key
 
+def input_node():
+    rospy.init_node('input_node', anonymous=True)
+    pub = rospy.Publisher('/turtle_commands', String, queue_size=10)
+    rate = rospy.Rate(10)
+    
+    print("Gunakan WASD untuk menggerakkan TurtleSim. Tekan Q untuk keluar.")
     while not rospy.is_shutdown():
-        message = "Halo dari ROBOTIK! Pesan Baru, Waktu: %s" % rospy.get_time()
-        rospy.loginfo(f"Mengirim pesan: {message}")
-        pub.publish(message)  # Mengirim pesan ke topic
-        rate.sleep()  # Tunggu sesuai rate
+        key = get_key()
+        if key in ['w', 'a', 's', 'd']:
+            rospy.loginfo(f"Sending command: {key}")
+            pub.publish(key)
+        elif key == 'q':
+            break
+        rate.sleep()
 
-if __name__ == "__main__":
+if _name_ == '_main_':
     try:
-        talker()
+        input_node()
     except rospy.ROSInterruptException:
         pass
